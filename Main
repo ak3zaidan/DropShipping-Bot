@@ -1,0 +1,595 @@
+from audioop import error
+import pickle
+import os
+import base64
+import string 
+from googleapiclient.discovery import build
+from google_auth_oauthlib.flow import InstalledAppFlow
+from google.auth.transport.requests import Request
+import email
+from apiclient import errors
+from webbrowser import Chrome
+from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
+from selenium.common.exceptions import TimeoutException
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.options import Options
+import time
+from selenium.webdriver.common.keys import Keys
+from random import randint, random, uniform
+from time import sleep
+from selenium.webdriver import ActionChains
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
+import re
+import smtplib
+
+SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
+
+keyword = [None] * 100
+keyword[0] = "Basketball"
+keyword[1] = "Tech Fleece Joggers"
+
+itemlink = [None] * 100
+itemlink[0] = "https://www.aliexpress.com/item/32975037447.html?spm=a2g0o.productlist.0.0.395058a1XFoKsJ&algo_pvid=a3a6fd59-b8c8-48ae-a809-b315170ba219&algo_exp_id=a3a6fd59-b8c8-48ae-a809-b315170ba219-0&pdp_ext_f=%7B%22sku_id%22%3A%2266735453474%22%7D&pdp_pi=-1%3B21.77%3B-1%3B-1%40salePrice%3BUSD%3Bsearch-mainSearch"
+itemlink[1] = "https://www.aliexpress.com/item/1005003144930575"
+
+cost = [None] * 100
+cost[0] = 10
+cost[1] = 12
+
+price = [None] * 100
+price[0] = 33
+price[1] = 18
+
+def read_config(filepath='config'):
+    with open(filepath) as f:
+        values = list(map(lambda x: x.split(' = '), f.readlines()))
+    return dict(values)
+
+def send_email(letter):
+    s = smtplib.SMTP('smtp.gmail.com', 587)
+  
+    s.starttls()
+    
+    s.login("ak3zaidan@gmail.com", "2oo3demha")
+
+    s.sendmail("ak3zaidan@gmail.com", "ak3zaidan@gmail.com", letter)
+    
+    s.quit()
+
+def get_driverb():
+
+    options = Options()
+
+    prefs = {"credentials_enable_service": False,
+        "profile.password_manager_enabled": False}
+
+    options.add_experimental_option("prefs", prefs)
+    options.add_experimental_option("excludeSwitches", ["enable-automation"])
+    options.add_experimental_option('useAutomationExtension', False)
+    options.add_experimental_option('excludeSwitches', ['enable-logging'])
+    options.add_argument('--disable-blink-features=AutomationControlled')
+    options.add_argument("--disable-extensions")
+    options.add_argument("--disable-popup-blocking")
+    options.add_argument("--disable-notifications")
+    options.add_argument("--start-maximized")
+    options.add_argument("user-data-dir=C:\\Users\\zaida\\AppData\\Local\\Google\\Chrome\\User Data")
+    options.add_argument("--profile-directory=Profile 3")
+
+    ser = Service("chromedriver.exe")
+    
+    driverb = webdriver.Chrome(service=ser, options=options)
+
+    return driverb
+
+def get_driver():
+
+    options = Options()
+
+    prefs = {"credentials_enable_service": False,
+        "profile.password_manager_enabled": False}
+
+    options.add_experimental_option("prefs", prefs)
+    options.add_experimental_option("excludeSwitches", ["enable-automation"])
+    options.add_experimental_option('useAutomationExtension', False)
+    options.add_experimental_option('excludeSwitches', ['enable-logging'])
+    options.add_argument('--disable-blink-features=AutomationControlled')
+    options.add_argument("--disable-extensions")
+    options.add_argument("--disable-popup-blocking")
+    options.add_argument("--disable-notifications")
+    options.add_argument("--start-maximized")
+
+    ser = Service("chromedriver.exe")
+    
+    driver = webdriver.Chrome(service=ser, options=options)
+
+    return driver
+
+def state_assigner(initials):
+    if initials == "AL": state = "Alabama"
+    if initials == "AK": state = "Alaska"
+    if initials == "AZ": state = "Arizona"
+    if initials == "AR": state = "Arkansas"
+    if initials == "CA": state = "California"
+    if initials == "ID": state = "Idaho"
+    if initials == "CO": state = "Colorado"
+    if initials == "CT": state = "Connecticut"
+    if initials == "DE": state = "Delaware"
+    if initials == "DC": state = "District of Columbia"
+    if initials == "FL": state = "Florida"
+    if initials == "GA": state = "Georgia"
+    if initials == "IL": state = "Illinois"
+    if initials == "IN": state = "Indiana"
+    if initials == "IA": state = "Iowa"
+    if initials == "KS": state = "Kansas"
+    if initials == "KY": state = "Kentucky"
+    if initials == "LA": state = "Louisiana"
+    if initials == "ME": state = "Maine"
+    if initials == "MD": state = "Maryland"
+    if initials == "MA": state = "Massachusetts"
+    if initials == "MI": state = "Michigan"
+    if initials == "MN": state = "Minnesota"
+    if initials == "MS": state = "Mississippi"
+    if initials == "MO": state = "Missouri"
+    if initials == "MT": state = "Montana"
+    if initials == "NE": state = "Nebraska"
+    if initials == "NV": state = "Nevada"
+    if initials == "NH": state = "New Hampshire"
+    if initials == "NJ": state = "New Jersey"
+    if initials == "NM": state = "New Mexico"
+    if initials == "NY": state = "New York"
+    if initials == "NC": state = "North Carolina"
+    if initials == "ND": state = "North Dakota"
+    if initials == "OH": state = "Ohio"
+    if initials == "OK": state = "Oklahoma"
+    if initials == "OR": state = "Oregon"
+    if initials == "PA": state = "Pennsylvania"
+    if initials == "RI": state = "Rhode Island"
+    if initials == "SC": state = "South Carolina"
+    if initials == "SD": state = "South Dakota"
+    if initials == "TN": state = "Tennessee"
+    if initials == "TX": state = "Texas"
+    if initials == "UT": state = "Utah"
+    if initials == "VT": state = "Vermont"
+    if initials == "VA": state = "Virginia"
+    if initials == "WA": state = "Washington"
+    if initials == "WV": state = "West Virginia"
+    if initials == "WI": state = "Wisconsin"
+    if initials == "WY": state = "Wyoming"
+
+    return state
+
+def main():
+    getMessages()
+
+def getMessages():
+    creds = None
+    if os.path.exists('token.pickle'):
+        with open('token.pickle', 'rb') as token:
+            creds = pickle.load(token)
+    if not creds or not creds.valid:
+        if creds and creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+        else:
+            flow = InstalledAppFlow.from_client_secrets_file(
+                'credentials.json', SCOPES)
+            creds = flow.run_local_server(port=0)
+        with open('token.pickle', 'wb') as token:
+            pickle.dump(creds, token)
+    service = build('gmail', 'v1', credentials=creds)
+    results = service.users().messages().list(userId='me', labelIds=['INBOX'], maxResults=50).execute()
+    messages = results.get('messages', [])
+    #------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    if not messages:
+        print("No messages found.")
+    else:
+        for message in messages:
+            msg = service.users().messages().get(userId='me', id=message['id'], format='raw').execute()
+            msg_str = base64.urlsafe_b64decode(msg['raw'].encode('ASCII'))
+            mime_msg = email.message_from_bytes(msg_str)
+            body_str = str(mime_msg)
+            if "You've received a new order via Facebook" in body_str:
+                #get important part of the email
+                step = body_str.split('see order details and more.')
+                step1 = step[1]
+                step2 = step1.split('Estimated tax')
+                step3 = step2[0]
+                step3_str = str(step3)
+
+                #get order number
+                splitup = re.findall(r'\w+', step3_str)
+                for x, new_val in enumerate(splitup):
+                    if "Order" in new_val:
+                        r = x + 1
+                        ordernum_str = splitup[r]
+                        break
+
+                #connect to google sheets and make sure the order wasnt placed yet
+                gc = gspread.service_account(filename='mycredentials.json')
+                gsheet = gc.open_by_url("https://docs.google.com/spreadsheets/d/1vtIK4O0SSnb54MynEw8qt9HiUp9ba-9hkdiY7Dp-Gyk/edit#gid=0")
+                wsheet = gsheet.worksheet("Sheet1")
+                values_column = wsheet.col_values(1)
+                x = 0
+                for value in values_column:
+                    values_str = str(value)
+                    value_str = values_str.strip()
+                    if ordernum_str == value_str:
+                        x += 1
+ #------------------------------------------------------------------------------------------------------------------------------------------------------------------
+                #if it wasnt placed go the fb link with info and get all info
+                if x == 0:
+                    driverb = get_driverb()
+                    driverb.get("https://business.facebook.com/commerce/271489201619813/orders/tab/ALL?business_id=367096774806329")
+                    time.sleep(5)
+                    specific_order = driverb.find_element(By.XPATH, "//a[text()="+ordernum_str+"]")
+                    specific_order.click()
+                    time.sleep(4)
+
+                    #get name
+                    nameb = driverb.find_element(By.XPATH,"/html/body/div[1]/div[1]/div/div/div/div/div[2]/div/div/div[3]/div[2]/div/div/div[2]/div[2]/div[2]/div/div/div/div[1]/div[1]").text
+                    name_str = str(nameb)
+                    name_str.strip()
+                    #get actual address
+                    address = driverb.find_element(By.XPATH,"/html/body/div[1]/div[1]/div/div/div/div/div[2]/div/div/div[3]/div[2]/div/div/div[2]/div[2]/div[2]/div/div/div/div[1]/div[2]").text
+                    addressa_str = str(address)
+                    addressa_str.strip()
+                    #get apartment or condo
+                    az = 0
+                    try:
+                        apt = driverb.find_element(By.XPATH,"/html/body/div[1]/div[1]/div/div/div/div/div[2]/div/div/div[3]/div[2]/div/div/div[2]/div[2]/div[2]/div/div/div/div[1]/div[3]").text
+                        aptsub = apt.strip()
+                        apta_str = str(aptsub)
+                        az += 1
+                    except:
+                        continue
+                    #get City
+                    csz = driverb.find_element(By.XPATH,"/html/body/div[1]/div[1]/div/div/div/div/div[2]/div/div/div[3]/div[2]/div/div/div[2]/div[2]/div[2]/div/div/div/div[1]/div[4]").text
+                    citystatezip_str = str(csz)
+                    splita = citystatezip_str.split(',')
+                    citypiece = splita[0]
+                    citypiece1 = citypiece.strip()
+                    cityofficial_str = str(citypiece1)
+                    #get state
+                    secondbigpiece = splita[1]
+                    secondsmallerpiece = secondbigpiece.strip()
+                    statepiece = secondsmallerpiece.split(' ')
+                    statepiece1 = statepiece[0]
+                    statepiece2 = statepiece1.strip()
+                    state1_str = str(statepiece2)
+                    stateofficial_str = state_assigner(state1_str)
+
+                    #get zip code
+                    zipcode = statepiece[1]
+                    zipecode1 = zipcode.strip()
+                    zipcodeofficial_str = str(zipecode1)
+                    driverb.close()
+                    Country_str = "United States"
+                    def clear(element):
+                        for i in range(50):
+                            element.send_keys(Keys.BACK_SPACE)
+                    def populate_shipping_info(driver,config):
+                        time.sleep(3)
+                        action = ActionChains(driver)
+                        shipping_btn =  driver.find_element(By.XPATH, "/html/body/div[1]/div/div[2]/div/div[1]/div[1]/div/div[3]/button")
+                        shipping_btn.click()
+ 
+                        Name = name_str
+                        phone = "5035164365"
+                        Addy_One = addressa_str
+                        apartment = apta_str
+                        State = stateofficial_str
+                        City = cityofficial_str
+                        Zipcode = zipcodeofficial_str
+ 
+                        time.sleep(2)
+                        edit_button = driver.find_element(By.XPATH, "/html/body/div[6]/div[2]/div/div[2]/div/ul/li[1]/div[2]/button[2]")
+                        edit_button.click()
+
+                        time.sleep(2)
+                        name_box = driver.find_element(By.XPATH, "/html/body/div[6]/div[2]/div/div[2]/div/div/div/div[1]/div/div/form/div[1]/div[2]/div/div[1]/div/div/span/input")
+                        clear(name_box)
+                        name_box.send_keys(Name)
+                        name_box.send_keys(Keys.ENTER)
+
+                        addybox = driver.find_element(By.XPATH, "/html/body/div[6]/div[2]/div/div[2]/div/div/div/div[1]/div/div/form/div[2]/div[2]/div[1]/div[1]/div/div/span/span[1]/input")
+                        clear(addybox)
+                        addybox.send_keys(Addy_One)
+                        time.sleep(3)
+                        name_box.click()
+                       
+                        if az == 1:
+                            aptbox = driver.find_element(By.XPATH, "/html/body/div[6]/div[2]/div/div[2]/div/div/div/div[1]/div/div/form/div[2]/div[2]/div[1]/div[2]/div/div/span/input")
+                            clear(aptbox)
+                            aptbox.send_keys(apartment)
+                            aptbox.send_keys(Keys.ENTER)
+ 
+                        statebox = driver.find_element(By.XPATH, "/html/body/div[6]/div[2]/div/div[2]/div/div/div/div[1]/div/div/form/div[2]/div[2]/div[2]/div[2]/div/div/span/span[1]/span[1]/span/input")
+                        clear(statebox)
+                        statebox.click()
+                        statebox.send_keys(State)
+                        statebox.send_keys(Keys.ENTER)
+                   
+                        citybox = driver.find_element(By.XPATH, "/html/body/div[6]/div[2]/div/div[2]/div/div/div/div[1]/div/div/form/div[2]/div[2]/div[2]/div[3]/div/div/span/span[1]/span[1]/span/input")
+                        clear(citybox)
+                        citybox.send_keys(City)
+                        citybox.send_keys(Keys.ENTER)
+                       
+                        zipbox = driver.find_element(By.XPATH, "/html/body/div[6]/div[2]/div/div[2]/div/div/div/div[1]/div/div/form/div[2]/div[2]/div[2]/div[4]/div/div/span/input")
+                        clear(zipbox)
+                        zipbox.send_keys(Zipcode)
+                        zipbox.send_keys(Keys.ENTER)
+
+                        confirm = driver.find_element(By.XPATH, "/html/body/div[6]/div[2]/div/div[2]/div/div/div/div[1]/div/div/form/div[4]/div/button[1]")
+                        confirm.click()
+                        time.sleep(4)
+
+                    #Get items to buy and quantity for each.
+                    orderlist = [] 
+                    qtylist = [] 
+                    bodyitems = re.findall(r'\w+', step3)
+                    for i in bodyitems:
+                        for value in keyword:
+                            value_str = str(value)
+                            if value_str in i:
+                                orderlist.append(value)
+                    g = len(orderlist)
+                    for x in range(g):
+                        for x, new_val in enumerate(bodyitems):
+                            if "Qty" in new_val:
+                                g = x + 1
+                                amount = bodyitems[g]
+                                amount_int = int(amount)
+                                qtylist.append(amount)
+#------------------------------------------------------------------------------------------------------------------------------------------------------------------
+                    #buy everything in the orderlist that we have now\
+                    x = len(orderlist)
+                    driver = get_driver()
+                    def get_quantity(value):
+                        if qtylist[value] == 2:
+                            qty_button = driver.find_element(By.XPATH, "/html/body/div[7]/div/div[2]/div/div[2]/div[8]/span/span/span[3]/button")
+                            qty_button.click()
+                        if qtylist[value] == 3:
+                            qty_button = driver.find_element(By.XPATH, "/html/body/div[7]/div/div[2]/div/div[2]/div[8]/span/span/span[3]/button")
+                            qty_button.click()
+                            qty_button.click()
+                        if qtylist[value] == 4:
+                            qty_button = driver.find_element(By.XPATH, "/html/body/div[7]/div/div[2]/div/div[2]/div[8]/span/span/span[3]/button")
+                            qty_button.click()
+                            qty_button.click()
+                            qty_button.click()
+                        if qtylist[value] == 5:
+                            qty_button = driver.find_element(By.XPATH, "/html/body/div[7]/div/div[2]/div/div[2]/div[8]/span/span/span[3]/button")
+                            qty_button.click()
+                            qty_button.click()
+                            qty_button.click()
+                            qty_button.click()
+                    def addto_cart(ordervalue, qtyvalue):
+                        location = keyword.index(orderlist[ordervalue])
+                        driver.switch_to.window(driver.window_handles[1])
+                        driver.get(location)
+                        time.sleep(3)
+                        get_quantity(qtyvalue)
+                        action = ActionChains(driver)
+                        for i in range(12):
+                            action.send_keys(Keys.DOWN).perform()
+                        time.sleep(1)
+                        addtocart_button = driver.find_element(By.XPATH, "/html/body/div[6]/div/div[2]/div/div[2]/div[12]/span[2]/button")
+                        addtocart_button.click()
+                        time.sleep(2)
+                        Closepopup_button = driver.find_element(By.XPATH, "/html/body/div[11]/div[2]/a/i")
+                        Closepopup_button.click()
+                        time.sleep(2)
+                    def check_out():
+                        Cart_button = driver.find_element(By.XPATH, "/html/body/div[5]/div/div[2]/div/div/a/i")
+                        Cart_button.click()
+                        time.sleep(2)
+                        selectall_button = driver.find_element(By.XPATH, "/html/body/div[6]/div/div/div[1]/div[1]/div[1]/div/div[2]/label/span[1]/input")
+                        selectall_button.click()
+                        time.sleep(3)
+                        buy_button = driver.find_element(By.XPATH, "/html/body/div[6]/div/div/div[1]/div[2]/div/div[1]/div/div/div[2]/button")
+                        buy_button.click()
+                        time.sleep(3)
+                        populate_shipping_info(driver,config)
+                        #placeorder_button = driver.find_element_by_xpath("/html/body/div[1]/div/div[2]/div/div[2]/div/div[1]/div/div/div[2]/div/button")
+                        #placeorder_button.click()
+                    f = 0
+                    def sign_in(driver, user, pwd,config):
+                        time.sleep(5)
+                        acc_btn = driver.find_element(By.XPATH, "/html/body/div[5]/div/div[2]/div[5]/div[3]/span/a")
+                        action = ActionChains(driver)
+                        action.move_to_element(acc_btn).perform()
+                        time.sleep(2)
+
+                        sign_btn = driver.find_element(By.CLASS_NAME,'sign-btn')
+                        sign_btn.click()
+
+                        username_box = WebDriverWait(driver, 10).until(
+                            EC.presence_of_element_located((By.ID, "fm-login-id")))
+                        username_box.click()
+                        for character in user:
+                            username_box.send_keys(character)
+                            time.sleep(round(uniform(0,1),2))
+
+                        time.sleep(2)
+                        pwd_box = driver.find_element(By.ID,'fm-login-password')
+                        pwd_box.click()
+                        pwd_box.clear()
+                        for character in pwd:
+                            pwd_box.send_keys(character)
+                            time.sleep(round(uniform(0,1),2))
+                        time.sleep(4)
+
+#------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+                    #if there is only 1 order
+                    if x == 1:
+                        location = keyword.index(orderlist[0])
+                        while f == 0:
+                            f = 0
+                            driver.get(itemlink[location])
+                            try:
+                                sign_in(driver,config['USER'],config['PWD'],config)
+                                f += 1
+                            except:
+                                continue
+                        get_quantity(0)
+                        action = ActionChains(driver)
+                        for i in range(12):
+                            action.send_keys(Keys.DOWN).perform()
+                        time.sleep(1)
+                        buynow_btn = driver.find_element(By.XPATH,("/html/body/div[7]/div/div[2]/div/div[2]/div[13]/span[1]/button"))
+                        buynow_btn.click()
+                        populate_shipping_info(driver,config)
+                        #placeorder_button = driver.find_element_by_xpath("/html/body/div[1]/div/div[2]/div/div[2]/div/div[1]/div/div/div[2]/div/button")
+                        #placeorder_button.click()
+                        WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.XPATH,"/html/body/div[1]/div[1]/div/div/div/div/div[2]/div/div/div/div[2]/div[2]/div[2]/div[2]/div[2]/div/div/div/div[1]/div[4]")))
+                        confirmation = str(driverb.find_element(By.XPATH,"/html/body/div[1]/div[1]/div/div/div/div/div[2]/div/div/div/div[2]/div[2]/div[2]/div[2]/div[2]/div/div/div/div[1]/div[4]").text)
+                        if "Payment Successful" in confirmation:
+                            values_column = wsheet.col_values(1)
+                            e = 0
+                            for value in values_column:
+                                e += 1
+                            e += 1
+                            str_e = str(e)
+                            wsheet.update('A'+str_e , ordernum_str)
+                            wsheet.update('B'+str_e , keyword[location])
+                            wsheet.update('C'+str_e , 'confirmed')
+                            wsheet.update('D'+str_e , cost[location])
+                            wsheet.update('E'+str_e , price[location])
+                        else:
+                            send_email("could not purchase on aliexpress")
+#------------------------------------------------------------------------------------------------------------------------------------------------------------------
+                    # if there are 2 orders
+                    if x == 2:
+                        location = keyword.index(orderlist[0])
+                        while f == 0:
+                            f = 0
+                            driver.get(itemlink[location])
+                            try:
+                                sign_in(driver,config['USER'],config['PWD'],config)
+                                f += 1
+                            except:
+                                continue
+                        get_quantity(0)
+                        addtocart_button = driver.find_element_by_xpath("/html/body/div[6]/div/div[2]/div/div[2]/div[12]/span[2]/button")
+                        addtocart_button.click()
+                        Closepopup_button = driver.find_element_by_xpath("/html/body/div[11]/div[2]/a/i")
+                        Closepopup_button.click()
+                       
+                        location2 = keyword.index(orderlist[1])
+                        addto_cart(1,1)
+ 
+                        check_out()
+ 
+                        confirmation = driver.find_element(By.XPATH,"/html/body/div[1]/div[1]/div/div/div/div/div[2]/div/div/div/div[2]/div[2]/div[2]/div[2]/div[2]/div/div/div/div[1]/div[4]").text
+                        if "Payment Successful" in confirmation:
+                            values_column = wsheet.col_values(1)
+                            e = 0
+                            for value in values_column:
+                                e += 1
+                            e += 1
+                            str_e = str(e)
+                            wsheet.update('A'+str_e , ordernum_str)
+                            wsheet.update('B'+str_e , keyword[location] + "\\" + keyword[location2])
+                            wsheet.update('C'+str_e , 'confirmed')
+                            wsheet.update('D'+str_e , cost[location] + cost[location2])
+                            wsheet.update('E'+str_e , price[location] + price[location2])
+                        else:
+                            send_email("could not purchase on aliexpress")
+#------------------------------------------------------------------------------------------------------------------------------------------------------------------
+                    # if there are 3 orders
+                    if x == 3:
+                        location = keyword.index(orderlist[0])
+                        while f == 0:
+                            f = 0
+                            driver.get(itemlink[location])
+                            try:
+                                sign_in(driver,config['USER'],config['PWD'],config)
+                                f += 1
+                            except:
+                                continue
+                        time.sleep(3)
+                        get_quantity(0)
+                        addtocart_button = driver.find_element_by_xpath("/html/body/div[6]/div/div[2]/div/div[2]/div[12]/span[2]/button")
+                        addtocart_button.click()
+                        Closepopup_button = driver.find_element_by_xpath("/html/body/div[11]/div[2]/a/i")
+                        Closepopup_button.click()
+                        time.sleep(2)
+                       
+                        location2 = keyword.index(orderlist[1])
+                        addto_cart(1,1)
+                       
+                        location3 = keyword.index(orderlist[2])
+                        addto_cart(2,2)
+                       
+                        check_out()
+ 
+                        confirmation = driver.find_element(By.XPATH,"/html/body/div[1]/div[1]/div/div/div/div/div[2]/div/div/div/div[2]/div[2]/div[2]/div[2]/div[2]/div/div/div/div[1]/div[4]").text
+                        if "Payment Successful" in confirmation:
+                            values_column = wsheet.col_values(1)
+                            e = 0
+                            for value in values_column:
+                                e += 1
+                            e += 1
+                            str_e = str(e)
+                            wsheet.update('A'+str_e , ordernum_str)
+                            wsheet.update('B'+str_e , keyword[location] + "\\" + keyword[location2] + "\\" + keyword[location3])
+                            wsheet.update('C'+str_e , 'confirmed')
+                            wsheet.update('D'+str_e , cost[location] + cost[location2] + cost[location3])
+                            wsheet.update('E'+str_e , price[location] + price[location2] + price[location3])
+                        else:
+                            send_email("could not purchase on aliexpress")
+#------------------------------------------------------------------------------------------------------------------------------------------------------------------
+                    # if there are 4 orders
+                    if x == 4:
+                        location = keyword.index(orderlist[0])
+                        while f == 0:
+                            f = 0
+                            driver.get(itemlink[location])
+                            try:
+                                sign_in(driver,config['USER'],config['PWD'],config)
+                                f += 1
+                            except:
+                                continue
+                        time.sleep(3)
+                        get_quantity(0)
+                        addtocart_button = driver.find_element_by_xpath("/html/body/div[6]/div/div[2]/div/div[2]/div[12]/span[2]/button")
+                        addtocart_button.click()
+                        time.sleep(2)
+                        Closepopup_button = driver.find_element_by_xpath("/html/body/div[11]/div[2]/a/i")
+                        Closepopup_button.click()
+                        time.sleep(2)
+                       
+                        location2 = keyword.index(orderlist[1])
+                        addto_cart(1,1)
+                        location3 = keyword.index(orderlist[2])
+                        addto_cart(2,2)
+                        location4 = keyword.index(orderlist[3])
+                        addto_cart(3,3)
+ 
+                        check_out()
+ 
+                        confirmation = driver.find_element(By.XPATH,"/html/body/div[1]/div[1]/div/div/div/div/div[2]/div/div/div/div[2]/div[2]/div[2]/div[2]/div[2]/div/div/div/div[1]/div[4]").text
+                        if "Payment Successful" in confirmation:
+                            values_column = wsheet.col_values(1)
+                            e = 0
+                            for value in values_column:
+                                e += 1
+                            e += 1
+                            str_e = str(e)
+                            wsheet.update('A'+str_e , ordernum_str)
+                            wsheet.update('B'+str_e , keyword[location] + "\\" + keyword[location2] + "\\" + keyword[location3] + "\\" + keyword[location4])
+                            wsheet.update('C'+str_e , 'confirmed')
+                            wsheet.update('D'+str_e , cost[location] + cost[location2] + cost[location3] + cost[location4])
+                            wsheet.update('E'+str_e , price[location] + price[location2] + price[location3] + price[location4])
+                        else:
+                            send_email("could not purchase on aliexpress")
+
+
+if __name__ == '__main__':
+    config = read_config()
+    main()
